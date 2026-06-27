@@ -1,6 +1,7 @@
-// Seeds data/db.json with the 3 test users, a few curated demo cases (guaranteed
-// clean matches for a quick walkthrough), and an import of the Claude Impact Lab
-// "Missing Persons at Kumbh Mela 2027" dataset (Nashik-Trimbakeshwar).
+// Seeds data/db.json with the test staff + booth accounts, a set of curated demo
+// cases (booth-stamped, with guaranteed clean matches for a quick walkthrough),
+// and an import of the Claude Impact Lab "Missing Persons at Kumbh Mela 2027"
+// dataset (Nashik-Trimbakeshwar).
 //
 // Run with: npm run seed
 //   SEED_IMPORT_LIMIT=1500 npm run seed   # import more dataset rows
@@ -13,7 +14,7 @@ import { getDb, defaultData, newId } from "../lib/db";
 import { createCaseWithMatching, NewCaseInput } from "../lib/cases";
 import { findLocationByLabel } from "../lib/constants";
 import { parseCsv } from "../lib/csv";
-import type { CaseStatus, User } from "../lib/types";
+import type { Booth, CaseStatus, User } from "../lib/types";
 
 function loc(label: string) {
   const l = findLocationByLabel(label);
@@ -24,6 +25,22 @@ function loc(label: string) {
 const BASE = Date.now();
 function hoursAgo(h: number): string {
   return new Date(BASE - h * 3600 * 1000).toISOString();
+}
+
+// Booth ids — referenced by the curated cases below.
+const BOOTH1 = "booth_ramkund";
+const BOOTH2 = "booth_trimbak";
+const BOOTH1_NAME = "Ramkund Ghat Booth";
+const BOOTH2_NAME = "Trimbakeshwar Gate Booth";
+
+// Stamp a curated case as logged by a given booth.
+function byBooth(boothId: string, boothName: string) {
+  return {
+    boothId,
+    boothName,
+    createdBy: boothId,
+    creatorKind: "booth" as const,
+  };
 }
 
 // ---- dataset mapping helpers ---------------------------------------------
@@ -58,10 +75,9 @@ async function main() {
   const db = await getDb();
   db.data = structuredClone(defaultData);
 
-  // --- Users ---------------------------------------------------------------
+  // --- Staff users (admin + police only; booths are separate logins) -------
   const userSpecs: Array<Omit<User, "passwordHash"> & { password: string }> = [
     { id: "user_admin", username: "admin", password: "Admin@123", role: "admin", name: "Control Room Admin" },
-    { id: "user_vol1", username: "volunteer1", password: "Volunteer@123", role: "volunteer", name: "Volunteer Asha" },
     { id: "user_pol1", username: "police1", password: "Police@123", role: "police", name: "Inspector Rao" },
   ];
   for (const u of userSpecs) {
@@ -71,6 +87,21 @@ async function main() {
       passwordHash: bcrypt.hashSync(u.password, 10),
       role: u.role,
       name: u.name,
+    });
+  }
+
+  // --- Booths (each booth IS a login) --------------------------------------
+  const boothSpecs: Array<Omit<Booth, "passwordHash"> & { password: string }> = [
+    { id: BOOTH1, username: "booth1", password: "Booth@123", name: BOOTH1_NAME, location: loc("Ramkund Ghat") },
+    { id: BOOTH2, username: "booth2", password: "Booth@123", name: BOOTH2_NAME, location: loc("Trimbakeshwar Approach") },
+  ];
+  for (const b of boothSpecs) {
+    db.data.booths.push({
+      id: b.id,
+      username: b.username,
+      passwordHash: bcrypt.hashSync(b.password, 10),
+      name: b.name,
+      location: b.location,
     });
   }
 
@@ -104,13 +135,14 @@ async function main() {
         characteristics: row.physical_description || "(no description provided)",
         reporterName: null,
         reporterContact: row.reporter_mobile || null,
-        transcript: null,
+        rawTranscript: null,
         personName: row.missing_person_name || null,
         reportingCenter: row.reporting_center || null,
         externalId: row.case_id || null,
         isDuplicate: (row.is_duplicate_report || "").toLowerCase() === "true",
         source: "dataset",
         createdBy: "user_admin",
+        creatorKind: "user",
       };
 
       // Only run matching for still-open records (resolved ones don't need
@@ -141,9 +173,10 @@ async function main() {
     console.warn(`Dataset CSV not found at ${csvPath} — skipping import.`);
   }
 
-  // --- Curated demo cases (guaranteed clean matches for a walkthrough) -----
+  // --- Curated demo cases (booth-stamped; guaranteed clean matches) --------
   // Created "now" and scored against everything already imported, so each
-  // produces a visible candidate list immediately.
+  // produces a visible candidate list immediately. Spread across both booths so
+  // the dashboard's hotspot-by-booth view shows real activity.
   const demo: NewCaseInput[] = [
     // Pair 1 — reporter looking for elderly father (strong match w/ #2).
     {
@@ -152,7 +185,7 @@ async function main() {
       ageRange: "71-80", gender: "male",
       characteristics: "Elderly man, white kurta, walking stick, hard of hearing.",
       reporterName: "Suresh Patil", reporterContact: "+91 90000 11111",
-      reportingCenter: "Ramkund Kho-Ya-Paya Kendra", createdBy: "user_vol1",
+      reportingCenter: "Ramkund Kho-Ya-Paya Kendra", ...byBooth(BOOTH1, BOOTH1_NAME),
     },
     // Pair 2 — self-missing elderly man found wandering (matches #1).
     {
@@ -160,8 +193,9 @@ async function main() {
       location: loc("Laxmi Narayan Ghat"), language: "Marathi", region: "Maharashtra",
       ageRange: "71-80", gender: "male",
       characteristics: "Confused elderly man with a wooden walking stick, white clothes.",
-      transcript: "My name is Ganpat. I came with my son. I cannot find him. I am from Pune.",
-      reportingCenter: "Panchavati Center", createdBy: "user_vol1",
+      rawTranscript: "Q: What is your name?\nA: My name is Ganpat.\nQ: Who did you come with?\nA: I came with my son, I cannot find him. I am from Pune.",
+      structuredByClaude: false,
+      reportingCenter: "Panchavati Center", ...byBooth(BOOTH1, BOOTH1_NAME),
     },
     // Pair 3 — child reported by mother (matches #4).
     {
@@ -170,7 +204,7 @@ async function main() {
       ageRange: "0-12", gender: "male",
       characteristics: "Boy in red t-shirt and blue shorts, mole on left cheek, about 8 years.",
       reporterName: "Kavita Devi", reporterContact: "+91 90000 22222",
-      reportingCenter: "Panchavati Center", createdBy: "user_vol1",
+      reportingCenter: "Panchavati Center", ...byBooth(BOOTH1, BOOTH1_NAME),
     },
     // Pair 4 — found child, proxy intake (matches #3).
     {
@@ -178,22 +212,90 @@ async function main() {
       location: loc("Gauri Patangan"), language: "Hindi",
       ageRange: "0-12", gender: "male",
       characteristics: "Small boy crying, red shirt, blue shorts, found near the Tapovan barricade.",
-      reporterName: "Volunteer Asha", reportingCenter: "Sadhugram Lost Found", createdBy: "user_vol1",
+      reporterName: "Volunteer Asha", reportingCenter: "Sadhugram Lost Found", ...byBooth(BOOTH1, BOOTH1_NAME),
     },
     // 5 — very sparse case (only location + time + partial desc).
     {
       intakePath: "A_child", role: "reported", createdAt: hoursAgo(2.8), timeReported: hoursAgo(2.8),
       location: loc("Ramkund Ghat"), language: null, ageRange: null, gender: null,
       characteristics: "Person found disoriented near Ramkund steps. Details pending.",
-      reporterName: "Volunteer Asha", reportingCenter: "Ramkund Kho-Ya-Paya Kendra", createdBy: "user_vol1",
+      reporterName: "Volunteer Asha", reportingCenter: "Ramkund Kho-Ya-Paya Kendra", ...byBooth(BOOTH1, BOOTH1_NAME),
     },
-    // 6 — elderly Tamil woman, sparse (missing region).
+    // Pair 6 & 7 — elderly Tamil woman: reporter (daughter) + self-missing.
+    {
+      intakePath: "C_standard", role: "reporter", createdAt: hoursAgo(9.5), timeReported: hoursAgo(9.5),
+      location: loc("Kushavart Kund"), language: "Tamil", region: "Tamil Nadu", district: "Madurai",
+      ageRange: "71-80", gender: "female",
+      characteristics: "My mother, maroon saree, thick spectacles, speaks only Tamil.",
+      reporterName: "Lakshmi", reporterContact: "+91 90000 33333",
+      reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", ...byBooth(BOOTH2, BOOTH2_NAME),
+    },
     {
       intakePath: "B_elderly", role: "self_missing", createdAt: hoursAgo(9), timeReported: hoursAgo(9),
-      location: loc("Kushavart Kund"), language: "Tamil", ageRange: "71-80", gender: "female",
+      location: loc("Trimbakeshwar Approach"), language: "Tamil", region: "Tamil Nadu", ageRange: "71-80", gender: "female",
       characteristics: "Elderly woman, speaks only Tamil, wearing spectacles and a maroon saree.",
-      transcript: "Naan en kuzhandhaiyai thedukiren. (I am looking for my child.)",
-      reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", createdBy: "user_vol1",
+      rawTranscript: "Q: What is your name?\nA: Naan Meenakshi.\nQ: Who are you looking for?\nA: Naan en magalai thedukiren. (I am looking for my daughter.)",
+      structuredByClaude: false,
+      reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", ...byBooth(BOOTH2, BOOTH2_NAME),
+    },
+    // 8 — Gujarati man, standard intake at Trimbakeshwar.
+    {
+      intakePath: "C_standard", role: "reporter", createdAt: hoursAgo(5.2), timeReported: hoursAgo(5.2),
+      location: loc("Trimbak Road"), language: "Gujarati", region: "Gujarat", district: "Surat",
+      ageRange: "41-60", gender: "male",
+      characteristics: "Middle-aged man in a cream shirt, carrying a brown cloth bag.",
+      reporterName: "Bhavesh Shah", reporterContact: "+91 90000 44444",
+      reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", ...byBooth(BOOTH2, BOOTH2_NAME),
+    },
+    // 9 — found elderly man near Trimbakeshwar (partial match to #8 region/age).
+    {
+      intakePath: "A_child", role: "reported", createdAt: hoursAgo(4.8), timeReported: hoursAgo(4.8),
+      location: loc("Trimbakeshwar Approach"), language: "Gujarati", ageRange: "41-60", gender: "male",
+      characteristics: "Disoriented man, cream-coloured shirt, no bag, found near the temple queue.",
+      reporterName: "Volunteer Ravi", reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", ...byBooth(BOOTH2, BOOTH2_NAME),
+    },
+    // 10 — Bengali woman, standard intake, Ramkund.
+    {
+      intakePath: "C_standard", role: "reporter", createdAt: hoursAgo(6.5), timeReported: hoursAgo(6.5),
+      location: loc("Kapila Sangam"), language: "Bengali", region: "West Bengal", district: "Kolkata",
+      ageRange: "18-40", gender: "female",
+      characteristics: "Young woman, green salwar kameez, gold bangles, scar on right hand.",
+      reporterName: "Anjan Das", reporterContact: "+91 90000 55555",
+      reportingCenter: "Bharat Bharati Control Room", ...byBooth(BOOTH1, BOOTH1_NAME),
+    },
+    // 11 — elderly Hindi man, audio intake, Trimbakeshwar.
+    {
+      intakePath: "B_elderly", role: "self_missing", createdAt: hoursAgo(7.7), timeReported: hoursAgo(7.7),
+      location: loc("Trimbakeshwar Approach"), language: "Hindi", region: "Madhya Pradesh", ageRange: "61-70", gender: "male",
+      characteristics: "Older man, saffron dhoti, bald, deaf in one ear.",
+      rawTranscript: "Q: What is your name?\nA: Mera naam Ramprasad hai.\nQ: Which place are you from?\nA: Main Ujjain se hoon.",
+      structuredByClaude: false,
+      reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", ...byBooth(BOOTH2, BOOTH2_NAME),
+    },
+    // 12 — teen girl reported, Ramkund.
+    {
+      intakePath: "C_standard", role: "reporter", createdAt: hoursAgo(2.1), timeReported: hoursAgo(2.1),
+      location: loc("Panchavati Circle"), language: "Marathi", region: "Maharashtra", district: "Nashik",
+      ageRange: "13-17", gender: "female",
+      characteristics: "Teenage girl, blue school dress, carrying a yellow umbrella.",
+      reporterName: "Sunita More", reporterContact: "+91 90000 66666",
+      reportingCenter: "Panchavati Center", ...byBooth(BOOTH1, BOOTH1_NAME),
+    },
+    // 13 — found teen girl (partial match to #12).
+    {
+      intakePath: "A_child", role: "reported", createdAt: hoursAgo(1.6), timeReported: hoursAgo(1.6),
+      location: loc("Sadhugram Gate 1"), language: "Marathi", ageRange: "13-17", gender: "female",
+      characteristics: "Girl in a blue dress with a yellow umbrella, looking for her mother.",
+      reporterName: "Volunteer Asha", reportingCenter: "Sadhugram Lost Found", ...byBooth(BOOTH1, BOOTH1_NAME),
+    },
+    // 14 — sparse Trimbakeshwar case (only language + location).
+    {
+      intakePath: "B_elderly", role: "self_missing", createdAt: hoursAgo(11), timeReported: hoursAgo(11),
+      location: loc("Kushavart Kund"), language: "Marathi", ageRange: null, gender: null,
+      characteristics: "Elderly person found near Kushavart, unable to give clear details.",
+      rawTranscript: "Q: What is your name?\nA: (no clear answer)",
+      structuredByClaude: false,
+      reportingCenter: "Trimbakeshwar Kho-Ya-Paya Kendra", ...byBooth(BOOTH2, BOOTH2_NAME),
     },
   ];
 
@@ -205,8 +307,9 @@ async function main() {
 
   // eslint-disable-next-line no-console
   console.log(
-    `Seeded ${db.data.users.length} users, ${db.data.cases.length} cases ` +
-      `(${imported} imported from dataset, ${importedOpen} open & matched, ${demo.length} curated demo), ` +
+    `Seeded ${db.data.users.length} staff users, ${db.data.booths.length} booths, ` +
+      `${db.data.cases.length} cases (${imported} imported from dataset, ` +
+      `${importedOpen} open & matched, ${demo.length} curated booth-logged demo), ` +
       `${db.data.matchCandidates.length} match candidates into data/db.json`
   );
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/session";
 import { geoStats } from "@/lib/geodata";
 import type { Case } from "@/lib/types";
 
@@ -8,9 +8,9 @@ export const runtime = "nodejs";
 
 // GET /api/dashboard -> live stats for the admin dashboard
 export async function GET() {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (user.role !== "admin") {
+  const principal = await getCurrentPrincipal();
+  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (principal.role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -117,12 +117,24 @@ export async function GET() {
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count);
 
+  // Hotspot-by-booth: how many cases each intake booth has logged. Only cases
+  // created during a booth session carry a boothName.
+  const boothCounts = new Map<string, number>();
+  for (const c of cases) {
+    if (!c.boothName) continue;
+    boothCounts.set(c.boothName, (boothCounts.get(c.boothName) ?? 0) + 1);
+  }
+  const boothHotspots = db.data.booths
+    .map((b) => ({ booth: b.name, count: boothCounts.get(b.name) ?? 0 }))
+    .sort((a, b) => b.count - a.count);
+
   const datasetCount = cases.filter((c) => c.source === "dataset").length;
 
   return NextResponse.json({
     counts: { open, pending, reunited, total: cases.length, dataset: datasetCount },
     avgResolutionHours,
     hotspots,
+    boothHotspots,
     duplicateFlags,
     casesByLocation,
     casesByCenter,

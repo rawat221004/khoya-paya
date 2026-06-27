@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { StatusBadge, PathBadge, RoleBadge, confidenceColor } from "@/components/CaseBadges";
+import { T } from "@/components/LanguageProvider";
 import type { Case } from "@/lib/types";
 
 interface SearchResult {
@@ -50,6 +51,7 @@ export default function CasesPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [searchedWithClaude, setSearchedWithClaude] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,31 +75,33 @@ export default function CasesPage() {
       return;
     }
     setSearching(true);
-    const res = await fetch("/api/search", {
+    const res = await fetch("/api/ai/smart-search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
     });
     const data = await res.json();
     setResults(data.results ?? []);
+    setSearchedWithClaude(Boolean(data.usedClaude));
     setSearching(false);
   }
 
   function clearSearch() {
     setQuery("");
     setResults(null);
+    setSearchedWithClaude(false);
   }
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-extrabold text-teal-700">Cases</h1>
+      <h1 className="mb-1 text-2xl font-extrabold text-teal-700"><T>Cases</T></h1>
       <p className="mb-4 text-sm text-slate-500">
-        Browse, filter, or run a free-text smart search powered by the matching engine.
+        <T>Browse, filter, or run a free-text smart search powered by the matching engine.</T>
       </p>
 
       {/* Smart search */}
       <form onSubmit={runSearch} className="card mb-4">
-        <label className="label">🔎 Smart search</label>
+        <label className="label">🔎 <T>Smart search</T></label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             className="input"
@@ -106,11 +110,11 @@ export default function CasesPage() {
             placeholder='e.g. "white kurta, walking stick, Marathi, near Ramkund"'
           />
           <button type="submit" className="btn-primary whitespace-nowrap" disabled={searching}>
-            {searching ? "Searching…" : "Search"}
+            {searching ? <T>Searching…</T> : <T>Search</T>}
           </button>
           {results !== null && (
             <button type="button" onClick={clearSearch} className="btn-ghost whitespace-nowrap">
-              Clear
+              <T>Clear</T>
             </button>
           )}
         </div>
@@ -118,11 +122,16 @@ export default function CasesPage() {
 
       {results !== null ? (
         <div className="space-y-3">
-          <p className="text-sm font-semibold text-slate-600">
+          <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600">
             {results.length} ranked result{results.length === 1 ? "" : "s"} for &ldquo;{query}&rdquo;
+            {searchedWithClaude ? (
+              <span className="badge bg-teal-100 text-teal-700">✨ <T>parsed by Claude</T></span>
+            ) : (
+              <span className="badge bg-slate-100 text-slate-500">⚙ <T>keyword fallback</T></span>
+            )}
           </p>
           {results.length === 0 && (
-            <div className="card text-sm text-slate-500">No matching open cases.</div>
+            <div className="card text-sm text-slate-500"><T>No matching open cases.</T></div>
           )}
           {results.map((r) => (
             <Link key={r.case.id} href={`/cases/${r.case.id}`} className="block">
@@ -156,18 +165,18 @@ export default function CasesPage() {
           {/* Filters */}
           <div className="card mb-4 flex flex-wrap gap-4">
             <div>
-              <label className="label">Status</label>
+              <label className="label"><T>Status</T></label>
               <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
-                <option value="">All</option>
+                <option value=""><T>All</T></option>
                 <option value="open">Open</option>
                 <option value="matched_pending">Pending</option>
                 <option value="closed">Reunited</option>
               </select>
             </div>
             <div>
-              <label className="label">Intake path</label>
+              <label className="label"><T>Intake path</T></label>
               <select className="input" value={path} onChange={(e) => setPath(e.target.value)}>
-                <option value="">All</option>
+                <option value=""><T>All</T></option>
                 <option value="A_child">Path A · Child</option>
                 <option value="B_elderly">Path B · Elderly</option>
                 <option value="C_standard">Path C · Standard</option>
@@ -176,9 +185,9 @@ export default function CasesPage() {
           </div>
 
           {loading ? (
-            <div className="card text-sm text-slate-500">Loading…</div>
+            <div className="card text-sm text-slate-500"><T>Loading…</T></div>
           ) : cases.length === 0 ? (
-            <div className="card text-sm text-slate-500">No cases match these filters.</div>
+            <div className="card text-sm text-slate-500"><T>No cases match these filters.</T></div>
           ) : (
             <div className="space-y-3">
               {cases.map((c) => (

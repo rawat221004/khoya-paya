@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, newId } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -10,11 +10,15 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (user.role === "police") {
+  const principal = await getCurrentPrincipal();
+  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (principal.role === "police") {
     return NextResponse.json({ error: "Police cannot confirm matches." }, { status: 403 });
   }
+  const by =
+    principal.kind === "booth"
+      ? { byBoothId: principal.id }
+      : { byUserId: principal.id };
 
   const { otherCaseId } = await req.json().catch(() => ({}));
   const db = await getDb();
@@ -50,7 +54,7 @@ export async function POST(
       action: `Match CONFIRMED with case ${other.id}${
         confidence !== null ? ` at ${confidence}% confidence` : ""
       } — case closed (reunited)`,
-      byUserId: user.id,
+      ...by,
       timestamp: now,
     });
   }

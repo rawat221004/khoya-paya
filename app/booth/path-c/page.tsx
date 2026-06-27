@@ -10,6 +10,7 @@ import {
   PhotoUpload,
 } from "@/components/Fields";
 import IntakeResult, { CreatedResult } from "@/components/IntakeResult";
+import { T } from "@/components/LanguageProvider";
 import { AGE_RANGES, GENDERS, LANGUAGES, REGIONS } from "@/lib/constants";
 import type { CaseRole } from "@/lib/types";
 
@@ -112,25 +113,25 @@ export default function PathC() {
   return (
     <div className="mx-auto max-w-2xl">
       <Link href="/booth" className="text-sm text-teal-600 hover:underline">
-        ← Back to intake
+        ← <T>Back to intake</T>
       </Link>
       <div className="mb-4 mt-2 flex items-center gap-3">
         <span className="text-4xl">📝</span>
         <div>
-          <h1 className="text-2xl font-extrabold text-sky-700">Standard Intake</h1>
-          <p className="text-sm text-slate-500">Language → who is missing → full details.</p>
+          <h1 className="text-2xl font-extrabold text-sky-700"><T>Standard Intake</T></h1>
+          <p className="text-sm text-slate-500"><T>Language → who is missing → full details.</T></p>
         </div>
       </div>
 
       {/* Language picker */}
       <div className="card mb-4">
-        <h2 className="mb-3 text-lg font-bold text-slate-700">1. Language</h2>
+        <h2 className="mb-3 text-lg font-bold text-slate-700"><T>1. Language</T></h2>
         <SelectField label="Preferred language" value={language} onChange={setLanguage} options={LANGUAGES} />
       </div>
 
       {/* Role select */}
       <div className="card mb-4">
-        <h2 className="mb-3 text-lg font-bold text-slate-700">2. Who is missing?</h2>
+        <h2 className="mb-3 text-lg font-bold text-slate-700"><T>2. Who is missing?</T></h2>
         <div className="grid grid-cols-2 gap-3">
           {ROLE_OPTIONS.map((o) => (
             <button
@@ -152,7 +153,7 @@ export default function PathC() {
 
       {/* Full data form */}
       <form onSubmit={submit} className="card space-y-4">
-        <h2 className="text-lg font-bold text-slate-700">3. Details</h2>
+        <h2 className="text-lg font-bold text-slate-700"><T>3. Details</T></h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField label="Time last seen / reported" value={timeReported} onChange={setTimeReported} type="datetime-local" />
@@ -183,7 +184,7 @@ export default function PathC() {
         {error && <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
 
         <button type="submit" className="btn-primary w-full text-lg" disabled={submitting}>
-          {submitting ? "Saving…" : "Create case & find matches"}
+          {submitting ? <T>Saving…</T> : <T>Create case & find matches</T>}
         </button>
       </form>
     </div>

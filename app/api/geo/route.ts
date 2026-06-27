@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/session";
 import {
   nearestPoliceStation,
   nearestChokepoint,
@@ -12,8 +12,8 @@ export const runtime = "nodejs";
 // GET /api/geo?lat=..&lng=..  -> nearest help points + CCTV coverage for a point.
 // GET /api/geo                -> overall geography dataset stats.
 export async function GET(req: NextRequest) {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const principal = await getCurrentPrincipal();
+  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const lat = parseFloat(searchParams.get("lat") ?? "");

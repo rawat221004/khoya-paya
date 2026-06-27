@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { T, useLang, UI_LANGUAGES } from "@/components/LanguageProvider";
 
 interface Me {
   id: string;
   username: string;
-  role: "admin" | "volunteer" | "police";
+  role: "admin" | "police" | "booth";
   name: string;
+  kind?: "user" | "booth";
 }
 
 const ROLE_LINKS: Record<Me["role"], Array<{ href: string; label: string }>> = {
@@ -18,7 +20,7 @@ const ROLE_LINKS: Record<Me["role"], Array<{ href: string; label: string }>> = {
     { href: "/cases", label: "Cases" },
     { href: "/police", label: "Police Feed" },
   ],
-  volunteer: [
+  booth: [
     { href: "/booth", label: "Intake" },
     { href: "/cases", label: "Cases" },
   ],
@@ -30,9 +32,41 @@ const ROLE_LINKS: Record<Me["role"], Array<{ href: string; label: string }>> = {
 
 const ROLE_BADGE: Record<Me["role"], string> = {
   admin: "bg-purple-100 text-purple-700",
-  volunteer: "bg-teal-100 text-teal-700",
+  booth: "bg-teal-100 text-teal-700",
   police: "bg-amber-100 text-amber-800",
 };
+
+const ROLE_LABEL: Record<Me["role"], string> = {
+  admin: "admin",
+  booth: "booth",
+  police: "police",
+};
+
+function LanguageSwitcher() {
+  const { lang, setLang, translating } = useLang();
+  return (
+    <div className="flex items-center gap-1">
+      {translating && (
+        <span className="hidden animate-pulse text-xs text-white/80 sm:inline">
+          translating…
+        </span>
+      )}
+      <span aria-hidden className="text-base">🌐</span>
+      <select
+        aria-label="Interface language"
+        value={lang}
+        onChange={(e) => setLang(e.target.value)}
+        className="rounded-md border border-white/30 bg-teal-700 px-2 py-1 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-white/40"
+      >
+        {UI_LANGUAGES.map((l) => (
+          <option key={l} value={l} className="text-slate-800">
+            {l}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export default function Navbar() {
   const [me, setMe] = useState<Me | null>(null);
@@ -70,9 +104,7 @@ export default function Navbar() {
       <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3">
         <Link href={me ? "/cases" : "/login"} className="flex items-center gap-2">
           <span className="text-2xl">🪔</span>
-          <span className="text-lg font-extrabold tracking-tight">
-            Kumbh Setu
-          </span>
+          <span className="text-lg font-extrabold tracking-tight">Kumbh Setu</span>
         </Link>
 
         <nav className="hidden flex-1 items-center gap-1 sm:flex">
@@ -86,25 +118,34 @@ export default function Navbar() {
                   active ? "bg-white/20" : "hover:bg-white/10"
                 }`}
               >
-                {l.label}
+                <T>{l.label}</T>
               </Link>
             );
           })}
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
+          <LanguageSwitcher />
           {loaded && me ? (
             <>
-              <span className="hidden text-sm sm:inline">{me.name}</span>
-              <span className={`badge ${ROLE_BADGE[me.role]}`}>{me.role}</span>
-              <button onClick={logout} className="rounded-md bg-white/15 px-3 py-1.5 text-sm font-semibold hover:bg-white/25">
-                Logout
+              <span className="hidden text-sm sm:inline">
+                {me.kind === "booth" ? `🛖 ${me.name}` : me.name}
+              </span>
+              <span className={`badge ${ROLE_BADGE[me.role]}`}>{ROLE_LABEL[me.role]}</span>
+              <button
+                onClick={logout}
+                className="rounded-md bg-white/15 px-3 py-1.5 text-sm font-semibold hover:bg-white/25"
+              >
+                <T>Logout</T>
               </button>
             </>
           ) : (
             loaded && (
-              <Link href="/login" className="rounded-md bg-white/15 px-3 py-1.5 text-sm font-semibold hover:bg-white/25">
-                Login
+              <Link
+                href="/login"
+                className="rounded-md bg-white/15 px-3 py-1.5 text-sm font-semibold hover:bg-white/25"
+              >
+                <T>Login</T>
               </Link>
             )
           )}
@@ -124,7 +165,7 @@ export default function Navbar() {
                   active ? "bg-white/20" : "hover:bg-white/10"
                 }`}
               >
-                {l.label}
+                <T>{l.label}</T>
               </Link>
             );
           })}

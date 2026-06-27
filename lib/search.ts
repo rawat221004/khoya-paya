@@ -3,8 +3,13 @@
 // pseudo-case (extracting language and a known location), then scored against
 // every open case using the same geo/demographic/language dimensions PLUS a
 // text-overlap dimension over the characteristics.
+//
+// This module is provider-agnostic: the deterministic parseQuery() is the
+// fallback for /api/ai/smart-search, and searchByStructured() lets the Claude
+// path feed an already-parsed filter object through the exact same scoring.
 
-import { LANGUAGES, AGE_RANGES, GENDERS, findLocationByLabel, LOCATIONS } from "./constants";
+import { findLocationByLabel, LOCATIONS } from "./constants";
+import { naiveExtract, type StructuredFields } from "./extract";
 import {
   Weights,
   ScoreSet,
@@ -39,46 +44,19 @@ function tokenize(text: string): string[] {
     .filter((t) => t.length > 1 && !STOPWORDS.has(t));
 }
 
-export interface ParsedQuery {
-  pseudo: Case;
-  queryTokens: string[];
-}
+/** Builds a partial pseudo-Case from a set of structured fields. */
+function pseudoCaseFrom(
+  fields: StructuredFields,
+  freeText: string
+): Case {
+  const location =
+    (fields.locationHint && findLocationByLabel(fields.locationHint)) ||
+    LOCATIONS.find((l) =>
+      freeText.toLowerCase().includes(l.label.toLowerCase())
+    ) ||
+    null;
 
-/** Builds a partial Case from the free-text query. */
-export function parseQuery(query: string): ParsedQuery {
-  const lower = query.toLowerCase();
-
-  // Language: first known language mentioned.
-  const language =
-    LANGUAGES.find((l) => lower.includes(l.toLowerCase())) ?? null;
-
-  // Location: longest known location label that appears in the query.
-  let location = null as Case["location"];
-  const matchedLoc = LOCATIONS
-    .filter((l) => lower.includes(l.label.toLowerCase()))
-    .sort((a, b) => b.label.length - a.label.length)[0];
-  if (matchedLoc) location = matchedLoc;
-
-  // Age range: explicit "65+" style or a bare number mapped to a bucket.
-  let ageRange: string | null =
-    AGE_RANGES.find((a) => lower.includes(a.toLowerCase())) ?? null;
-  if (!ageRange) {
-    const numMatch = lower.match(/\b(\d{1,3})\b/);
-    if (numMatch) {
-      const n = parseInt(numMatch[1], 10);
-      ageRange = ageBucketFor(n);
-    }
-  }
-
-  // Gender keywords.
-  let gender: string | null =
-    GENDERS.find((g) => g !== "unknown" && lower.includes(g)) ?? null;
-  if (!gender) {
-    if (/\b(man|male|boy|gentleman|father|husband|son)\b/.test(lower)) gender = "male";
-    else if (/\b(woman|female|girl|lady|mother|wife|daughter)\b/.test(lower)) gender = "female";
-  }
-
-  const pseudo: Case = {
+  return {
     id: "__query__",
     status: "open",
     intakePath: "C_standard",
@@ -86,31 +64,22 @@ export function parseQuery(query: string): ParsedQuery {
     photoUrl: null,
     timeReported: new Date().toISOString(),
     location,
-    language,
-    region: null,
-    ageRange,
-    gender,
-    characteristics: query,
+    language: fields.language ?? null,
+    region: fields.region ?? null,
+    ageRange: fields.ageRange ?? null,
+    gender: fields.gender ?? null,
+    characteristics: [freeText, fields.characteristics].filter(Boolean).join(" "),
     reporterName: null,
     reporterContact: null,
-    transcript: null,
+    rawTranscript: null,
+    structuredByClaude: false,
+    boothId: null,
+    boothName: null,
     createdBy: "search",
     createdAt: new Date().toISOString(),
     matchedCaseId: null,
     confidenceAtMatch: null,
   };
-
-  return { pseudo, queryTokens: tokenize(query) };
-}
-
-function ageBucketFor(n: number): string {
-  if (n <= 5) return "0-5";
-  if (n <= 12) return "6-12";
-  if (n <= 19) return "13-19";
-  if (n <= 35) return "20-35";
-  if (n <= 50) return "36-50";
-  if (n <= 65) return "51-65";
-  return "65+";
 }
 
 /** Text-overlap score (0-100) of query tokens against a case's descriptive text. */
@@ -147,8 +116,12 @@ export interface SearchResult {
   breakdown: string[];
 }
 
-export function smartSearch(query: string, openCases: Case[]): SearchResult[] {
-  const { pseudo, queryTokens } = parseQuery(query);
+/** Core ranking: scores a pseudo-case + token bag against the open cases. */
+function rank(
+  pseudo: Case,
+  queryTokens: string[],
+  openCases: Case[]
+): SearchResult[] {
   const results: SearchResult[] = [];
   for (const c of openCases) {
     const scores: ScoreSet = {
@@ -171,4 +144,29 @@ export function smartSearch(query: string, openCases: Case[]): SearchResult[] {
   }
   results.sort((a, b) => b.score - a.score);
   return results;
+}
+
+/**
+ * Deterministic free-text search (the no-API-key fallback). Parses the query
+ * itself with the naive extractor, then ranks.
+ */
+export function smartSearch(query: string, openCases: Case[]): SearchResult[] {
+  const fields = naiveExtract(query);
+  const pseudo = pseudoCaseFrom(fields, query);
+  return rank(pseudo, tokenize(query), openCases);
+}
+
+/**
+ * Search from an already-parsed filter (the Claude path). The free-text query is
+ * still used for the text-overlap dimension so descriptive words count.
+ */
+export function searchByStructured(
+  fields: StructuredFields,
+  query: string,
+  openCases: Case[]
+): SearchResult[] {
+  const pseudo = pseudoCaseFrom(fields, query);
+  // Token bag combines the original query with any characteristics Claude pulled.
+  const tokenSource = [query, fields.characteristics].filter(Boolean).join(" ");
+  return rank(pseudo, tokenize(tokenSource), openCases);
 }

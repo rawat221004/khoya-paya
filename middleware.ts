@@ -8,7 +8,7 @@ const COOKIE_NAME = "kumbh_session";
 const SECRET =
   process.env.SESSION_SECRET || "kumbh-setu-dev-secret-key-change-me-please";
 
-type Role = "admin" | "volunteer" | "police";
+type Role = "admin" | "police" | "booth";
 
 function b64urlToBytes(b64url: string): Uint8Array {
   const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
@@ -28,7 +28,7 @@ function bytesToB64url(bytes: ArrayBuffer): string {
 
 async function verify(
   token: string | undefined
-): Promise<{ uid: string; role: Role } | null> {
+): Promise<{ pid: string; role: Role } | null> {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length !== 2) return null;
@@ -52,7 +52,7 @@ async function verify(
   try {
     const json = new TextDecoder().decode(b64urlToBytes(payloadB64));
     const payload = JSON.parse(json);
-    return { uid: payload.uid, role: payload.role };
+    return { pid: payload.pid, role: payload.role };
   } catch {
     return null;
   }
@@ -62,8 +62,8 @@ async function verify(
 const RULES: Array<{ prefix: string; roles: Role[] }> = [
   { prefix: "/dashboard", roles: ["admin"] },
   { prefix: "/police", roles: ["police", "admin"] },
-  { prefix: "/booth", roles: ["volunteer", "admin"] },
-  { prefix: "/cases", roles: ["admin", "volunteer", "police"] },
+  { prefix: "/booth", roles: ["booth", "admin"] },
+  { prefix: "/cases", roles: ["admin", "booth", "police"] },
 ];
 
 function homeFor(role: Role): string {

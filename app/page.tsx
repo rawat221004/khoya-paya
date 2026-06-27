@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/session";
 
 export default async function Home() {
-  const user = await getSessionUser();
-  if (!user) redirect("/login");
-  if (user.role === "admin") redirect("/dashboard");
-  if (user.role === "police") redirect("/police");
+  const principal = await getCurrentPrincipal();
+  if (!principal) redirect("/login");
+  if (principal.role === "admin") redirect("/dashboard");
+  if (principal.role === "police") redirect("/police");
   redirect("/booth");
 }

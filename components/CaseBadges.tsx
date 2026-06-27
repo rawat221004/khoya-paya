@@ -1,3 +1,4 @@
+import { T } from "@/components/LanguageProvider";
 import type { Case } from "@/lib/types";
 
 const STATUS_STYLE: Record<Case["status"], string> = {
@@ -26,15 +27,15 @@ const ROLE_LABEL: Record<Case["role"], string> = {
 };
 
 export function StatusBadge({ status }: { status: Case["status"] }) {
-  return <span className={`badge ${STATUS_STYLE[status]}`}>{STATUS_LABEL[status]}</span>;
+  return <span className={`badge ${STATUS_STYLE[status]}`}><T>{STATUS_LABEL[status]}</T></span>;
 }
 
 export function PathBadge({ path }: { path: Case["intakePath"] }) {
-  return <span className="badge bg-teal-100 text-teal-700">{PATH_LABEL[path]}</span>;
+  return <span className="badge bg-teal-100 text-teal-700"><T>{PATH_LABEL[path]}</T></span>;
 }
 
 export function RoleBadge({ role }: { role: Case["role"] }) {
-  return <span className="badge bg-sky-100 text-sky-700">{ROLE_LABEL[role]}</span>;
+  return <span className="badge bg-sky-100 text-sky-700"><T>{ROLE_LABEL[role]}</T></span>;
 }
 
 export function confidenceColor(score: number): string {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { LanguageProvider } from "@/components/LanguageProvider";
 
 export const metadata: Metadata = {
   title: "Kumbh Setu — Missing Persons Management",
@@ -16,8 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
+        <LanguageProvider>
+          <Navbar />
+          <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
+        </LanguageProvider>
       </body>
     </html>
   );

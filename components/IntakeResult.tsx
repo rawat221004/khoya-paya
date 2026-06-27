@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { T } from "@/components/LanguageProvider";
 
 export interface CreatedResult {
   caseId: string;
@@ -20,10 +21,10 @@ export default function IntakeResult({
       <div className="flex items-start gap-3">
         <span className="text-3xl">✅</span>
         <div className="flex-1">
-          <h2 className="text-lg font-bold text-teal-800">Case created</h2>
+          <h2 className="text-lg font-bold text-teal-800"><T>Case created</T></h2>
           <p className="text-sm text-teal-700">
-            Case <span className="font-mono">{result.caseId}</span> was saved and
-            scored against all open cases.
+            <T>Case</T> <span className="font-mono">{result.caseId}</span>{" "}
+            <T>was saved and scored against all open cases.</T>
           </p>
 
           {result.candidates.length > 0 ? (
@@ -34,17 +35,16 @@ export default function IntakeResult({
             </p>
           ) : (
             <p className="mt-2 text-sm text-teal-700">
-              No matches above threshold yet — this case will be re-scored as new
-              cases arrive.
+              <T>No matches above threshold yet — this case will be re-scored as new cases arrive.</T>
             </p>
           )}
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href={`/cases/${result.caseId}`} className="btn-primary">
-              View case &amp; matches →
+              <T>View case &amp; matches →</T>
             </Link>
             <button onClick={onReset} className="btn-secondary">
-              Register another
+              <T>Register another</T>
             </button>
           </div>
         </div>

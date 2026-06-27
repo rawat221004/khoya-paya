@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LOCATIONS } from "@/lib/constants";
+import { T, useLang } from "@/components/LanguageProvider";
 
 export function Field({
   label,
@@ -14,9 +15,9 @@ export function Field({
 }) {
   return (
     <div>
-      <label className="label">{label}</label>
+      <label className="label"><T>{label}</T></label>
       {children}
-      {hint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-slate-400"><T>{hint}</T></p>}
     </div>
   );
 }
@@ -36,10 +37,11 @@ export function SelectField({
   placeholder?: string;
   hint?: string;
 }) {
+  const { get } = useLang();
   return (
     <Field label={label} hint={hint}>
       <select className="input" value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value="">{placeholder}</option>
+        <option value="">{get(placeholder)}</option>
         {options.map((o) => (
           <option key={o} value={o}>
             {o}
@@ -65,13 +67,14 @@ export function TextField({
   hint?: string;
   type?: string;
 }) {
+  const { get } = useLang();
   return (
     <Field label={label} hint={hint}>
       <input
         type={type}
         className="input"
         value={value}
-        placeholder={placeholder}
+        placeholder={placeholder ? get(placeholder) : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
     </Field>
@@ -93,13 +96,14 @@ export function TextAreaField({
   rows?: number;
   hint?: string;
 }) {
+  const { get } = useLang();
   return (
     <Field label={label} hint={hint}>
       <textarea
         className="input"
         rows={rows}
         value={value}
-        placeholder={placeholder}
+        placeholder={placeholder ? get(placeholder) : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
     </Field>
@@ -116,6 +120,7 @@ export function LocationField({
   value: string; // label
   onChange: (loc: { lat: number; lng: number; label: string } | null) => void;
 }) {
+  const { get } = useLang();
   return (
     <Field label={label}>
       <select
@@ -126,7 +131,7 @@ export function LocationField({
           onChange(loc);
         }}
       >
-        <option value="">— select location —</option>
+        <option value="">{get("— select location —")}</option>
         {LOCATIONS.map((l) => (
           <option key={l.label} value={l.label}>
             {l.label}
@@ -173,7 +178,7 @@ export function PhotoUpload({
   return (
     <Field label="Photo (optional)">
       <input type="file" accept="image/*" onChange={handle} className="block w-full text-sm" />
-      {uploading && <p className="mt-1 text-xs text-teal-600">Uploading…</p>}
+      {uploading && <p className="mt-1 text-xs text-teal-600"><T>Uploading…</T></p>}
       {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
       {value && (
         // eslint-disable-next-line @next/next/no-img-element

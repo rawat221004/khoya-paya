@@ -1,6 +1,11 @@
 // Shared data model types for Kumbh Setu.
 
-export type Role = "admin" | "volunteer" | "police";
+// Staff users log in with a personal account; a booth IS a login (used by
+// whichever volunteer is stationed there that shift). So there are two principal
+// kinds. For route-gating purposes a booth carries the synthetic role "booth".
+export type StaffRole = "admin" | "police";
+export type PrincipalRole = "admin" | "police" | "booth";
+export type PrincipalKind = "user" | "booth";
 
 export type CaseStatus = "open" | "matched_pending" | "closed";
 
@@ -13,20 +18,32 @@ export interface User {
   id: string;
   username: string;
   passwordHash: string;
-  role: Role;
+  role: StaffRole;
   name: string;
-}
-
-export interface Session {
-  id: string;
-  userId: string;
-  createdAt: string;
 }
 
 export interface GeoPoint {
   lat: number;
   lng: number;
   label: string;
+}
+
+// A booth is both a physical intake station and a login account. Every case
+// created during a booth session is stamped with the booth id/name/location so
+// the dashboard can show a hotspot-by-booth breakdown.
+export interface Booth {
+  id: string;
+  username: string;
+  passwordHash: string;
+  name: string;
+  location: GeoPoint;
+}
+
+export interface Session {
+  id: string;
+  principalId: string; // user id OR booth id
+  kind: PrincipalKind;
+  createdAt: string;
 }
 
 export interface Case {
@@ -44,8 +61,11 @@ export interface Case {
   characteristics: string | null;
   reporterName: string | null;
   reporterContact: string | null;
-  transcript: string | null; // for path B (elderly audio capture)
-  createdBy: string; // user id
+  rawTranscript: string | null; // unedited spoken/typed answers, Path B
+  structuredByClaude: boolean; // true if Claude parsed the transcript into fields
+  boothId: string | null; // which booth logged this in
+  boothName: string | null;
+  createdBy: string; // principal id (user id or booth id) that created the case
   createdAt: string;
   matchedCaseId: string | null;
   confidenceAtMatch: number | null;
@@ -73,12 +93,14 @@ export interface AuditEntry {
   id: string;
   caseId: string;
   action: string;
-  byUserId: string;
+  byUserId?: string; // set when a staff user performed the action
+  byBoothId?: string; // set when a booth session performed the action
   timestamp: string;
 }
 
 export interface DbData {
   users: User[];
+  booths: Booth[];
   cases: Case[];
   matchCandidates: MatchCandidate[];
   auditLog: AuditEntry[];

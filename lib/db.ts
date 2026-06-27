@@ -14,6 +14,7 @@ const DB_FILE = path.join(DB_DIR, "db.json");
 
 export const defaultData: DbData = {
   users: [],
+  booths: [],
   cases: [],
   matchCandidates: [],
   auditLog: [],
@@ -52,6 +53,7 @@ export async function getDb(): Promise<Low<DbData>> {
   }
   // Defensive: ensure all collections exist even if the file is partial.
   db.data.users ||= [];
+  db.data.booths ||= [];
   db.data.cases ||= [];
   db.data.matchCandidates ||= [];
   db.data.auditLog ||= [];

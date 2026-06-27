@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/session";
 import { newId } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -10,8 +10,8 @@ const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 // POST /api/upload  (multipart/form-data, field "file") -> { url }
 export async function POST(req: NextRequest) {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const principal = await getCurrentPrincipal();
+  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const form = await req.formData();
   const file = form.get("file");

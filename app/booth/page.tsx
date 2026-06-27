@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { T } from "@/components/LanguageProvider";
 
 const PATHS = [
   {
@@ -30,9 +31,9 @@ export default function BoothHome() {
   return (
     <div>
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-extrabold text-teal-700">Intake Booth</h1>
+        <h1 className="text-2xl font-extrabold text-teal-700"><T>Intake Booth</T></h1>
         <p className="text-slate-500">
-          Who are we registering? Tap the option that fits the person in front of you.
+          <T>Who are we registering? Tap the option that fits the person in front of you.</T>
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { getCurrentPrincipal } from "@/lib/session";
 import { createCaseWithMatching, NewCaseInput } from "@/lib/cases";
 import { findLocationByLabel } from "@/lib/constants";
 import type { Case, CaseRole, IntakePath } from "@/lib/types";
@@ -9,19 +9,21 @@ export const runtime = "nodejs";
 
 // GET /api/cases?status=open&path=A_child  -> list cases (newest first)
 export async function GET(req: NextRequest) {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const principal = await getCurrentPrincipal();
+  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = await getDb();
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const path = searchParams.get("path");
   const role = searchParams.get("role");
+  const boothId = searchParams.get("boothId");
 
   let cases = [...db.data.cases];
   if (status) cases = cases.filter((c) => c.status === status);
   if (path) cases = cases.filter((c) => c.intakePath === path);
   if (role) cases = cases.filter((c) => c.role === role);
+  if (boothId) cases = cases.filter((c) => c.boothId === boothId);
 
   cases.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   return NextResponse.json({ cases });
@@ -38,9 +40,9 @@ function clean(v: unknown): string | null {
 
 // POST /api/cases  -> create a case, run matching, return case + candidates
 export async function POST(req: NextRequest) {
-  const user = await getSessionUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (user.role === "police") {
+  const principal = await getCurrentPrincipal();
+  if (!principal) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (principal.role === "police") {
     return NextResponse.json({ error: "Police cannot create cases." }, { status: 403 });
   }
 
@@ -63,6 +65,16 @@ export async function POST(req: NextRequest) {
     location = findLocationByLabel(body.locationLabel);
   }
 
+  // Booth stamping: a case created during a booth session carries that booth's
+  // id/name, and defaults its location to the booth's location when none was
+  // entered on the form. This powers the dashboard hotspot-by-booth view.
+  const isBooth = principal.kind === "booth";
+  const boothId = isBooth ? principal.id : null;
+  const boothName = isBooth ? principal.name : null;
+  if (!location && isBooth && principal.location) {
+    location = { ...principal.location };
+  }
+
   const input: NewCaseInput = {
     intakePath,
     role,
@@ -76,8 +88,12 @@ export async function POST(req: NextRequest) {
     characteristics: clean(body.characteristics),
     reporterName: clean(body.reporterName),
     reporterContact: clean(body.reporterContact),
-    transcript: clean(body.transcript),
-    createdBy: user.id,
+    rawTranscript: clean(body.rawTranscript),
+    structuredByClaude: body.structuredByClaude === true,
+    boothId,
+    boothName,
+    createdBy: principal.id,
+    creatorKind: principal.kind,
   };
 
   const db = await getDb();

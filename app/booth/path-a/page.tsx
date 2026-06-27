@@ -11,6 +11,7 @@ import {
 } from "@/components/Fields";
 import IntakeResult, { CreatedResult } from "@/components/IntakeResult";
 import { AGE_RANGES, GENDERS, LANGUAGES, REGIONS } from "@/lib/constants";
+import { T, useLang } from "@/components/LanguageProvider";
 
 function nowLocal(): string {
   const d = new Date();
@@ -19,6 +20,7 @@ function nowLocal(): string {
 }
 
 export default function PathA() {
+  const { get } = useLang();
   const [foundTime, setFoundTime] = useState(nowLocal());
   const [location, setLocation] = useState<{ lat: number; lng: number; label: string } | null>(null);
   const [ageRange, setAgeRange] = useState("");
@@ -96,14 +98,14 @@ export default function PathA() {
   return (
     <div className="mx-auto max-w-2xl">
       <Link href="/booth" className="text-sm text-teal-600 hover:underline">
-        ← Back to intake
+        ← <T>Back to intake</T>
       </Link>
       <div className="mb-4 mt-2 flex items-center gap-3">
         <span className="text-4xl">🧒</span>
         <div>
-          <h1 className="text-2xl font-extrabold text-amber-700">Child / Cannot Respond</h1>
+          <h1 className="text-2xl font-extrabold text-amber-700"><T>Child / Cannot Respond</T></h1>
           <p className="text-sm text-slate-500">
-            You (the volunteer) fill in everything you can observe about the found person.
+            <T>You (the volunteer) fill in everything you can observe about the found person.</T>
           </p>
         </div>
       </div>
@@ -144,7 +146,7 @@ export default function PathA() {
         {error && <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
 
         <button type="submit" className="btn-primary w-full text-lg" disabled={submitting}>
-          {submitting ? "Saving…" : "Create case & find matches"}
+          {submitting ? get("Saving…") : get("Create case & find matches")}
         </button>
       </form>
     </div>

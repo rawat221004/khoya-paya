@@ -3,12 +3,13 @@
 import type { Low } from "lowdb";
 import { newId } from "./db";
 import { findCandidates, EXACT_MATCH_THRESHOLD } from "./matching";
-import type { Case, DbData, MatchCandidate } from "./types";
+import type { Case, DbData, MatchCandidate, PrincipalKind } from "./types";
 
 export type NewCaseInput = {
   intakePath: Case["intakePath"];
   role: Case["role"];
-  createdBy: string;
+  createdBy: string; // principal id (user id or booth id)
+  creatorKind: PrincipalKind; // determines the audit-log attribution field
 } & Partial<Omit<Case, "id" | "matchedCaseId" | "confidenceAtMatch">>;
 
 export interface CreateOptions {
@@ -17,6 +18,25 @@ export interface CreateOptions {
   runMatching?: boolean;
   // Cap how many candidate rows are stored (keeps db.json bounded at scale).
   maxCandidates?: number;
+}
+
+/** Writes an audit entry attributed to the correct principal kind. */
+function auditEntry(
+  caseId: string,
+  action: string,
+  creatorKind: PrincipalKind,
+  createdBy: string,
+  timestamp: string
+) {
+  return {
+    id: newId("audit"),
+    caseId,
+    action,
+    ...(creatorKind === "booth"
+      ? { byBoothId: createdBy }
+      : { byUserId: createdBy }),
+    timestamp,
+  };
 }
 
 /**
@@ -47,7 +67,10 @@ export function createCaseWithMatching(
     characteristics: input.characteristics ?? null,
     reporterName: input.reporterName ?? null,
     reporterContact: input.reporterContact ?? null,
-    transcript: input.transcript ?? null,
+    rawTranscript: input.rawTranscript ?? null,
+    structuredByClaude: input.structuredByClaude ?? false,
+    boothId: input.boothId ?? null,
+    boothName: input.boothName ?? null,
     createdBy: input.createdBy,
     createdAt,
     matchedCaseId: null,
@@ -62,18 +85,21 @@ export function createCaseWithMatching(
 
   db.data.cases.push(newCase);
 
-  db.data.auditLog.push({
-    id: newId("audit"),
-    caseId: newCase.id,
-    action:
+  db.data.auditLog.push(
+    auditEntry(
+      newCase.id,
       newCase.source === "dataset"
         ? `Imported from Kumbh Mela 2027 dataset (${newCase.externalId ?? "n/a"}) via ${
             newCase.reportingCenter ?? "unknown center"
           }`
-        : `Case created via ${pathLabel(newCase.intakePath)}`,
-    byUserId: newCase.createdBy,
-    timestamp: createdAt,
-  });
+        : `Case created via ${pathLabel(newCase.intakePath)}${
+            newCase.boothName ? ` at ${newCase.boothName}` : ""
+          }`,
+      input.creatorKind,
+      newCase.createdBy,
+      createdAt
+    )
+  );
 
   if (!runMatching) {
     return { newCase, candidates: [] };
@@ -98,15 +124,17 @@ export function createCaseWithMatching(
   if (candidates.length > 0) {
     const best = candidates[0];
     const auto = best.score >= EXACT_MATCH_THRESHOLD;
-    db.data.auditLog.push({
-      id: newId("audit"),
-      caseId: newCase.id,
-      action: auto
-        ? `High-confidence match auto-suggested (${best.score}% vs case ${best.caseIdB})`
-        : `${candidates.length} candidate(s) flagged for volunteer review (top ${best.score}%)`,
-      byUserId: newCase.createdBy,
-      timestamp: now,
-    });
+    db.data.auditLog.push(
+      auditEntry(
+        newCase.id,
+        auto
+          ? `High-confidence match auto-suggested (${best.score}% vs case ${best.caseIdB})`
+          : `${candidates.length} candidate(s) flagged for volunteer review (top ${best.score}%)`,
+        input.creatorKind,
+        newCase.createdBy,
+        now
+      )
+    );
   }
 
   return { newCase, candidates };
@@ -114,7 +142,7 @@ export function createCaseWithMatching(
 
 function pathLabel(p: Case["intakePath"]): string {
   if (p === "A_child") return "Path A (Child / Unable proxy)";
-  if (p === "B_elderly") return "Path B (Elderly audio)";
+  if (p === "B_elderly") return "Path B (Elderly audio + text)";
   return "Path C (Standard)";
 }
 

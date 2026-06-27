@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { T } from "@/components/LanguageProvider";
 import {
   BarChart,
   Bar,
@@ -18,6 +19,7 @@ interface DashboardData {
   counts: { open: number; pending: number; reunited: number; total: number; dataset: number };
   avgResolutionHours: number | null;
   hotspots: Array<{ label: string; count: number }>;
+  boothHotspots: Array<{ booth: string; count: number }>;
   duplicateFlags: Array<{
     caseIdA: string;
     caseIdB: string;
@@ -35,7 +37,7 @@ interface DashboardData {
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent: string }) {
   return (
     <div className="card">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="text-sm font-medium text-slate-500"><T>{label}</T></p>
       <p className={`mt-1 text-3xl font-extrabold ${accent}`}>{value}</p>
     </div>
   );
@@ -54,18 +56,18 @@ export default function Dashboard() {
       });
   }, []);
 
-  if (loading) return <div className="card text-sm text-slate-500">Loading dashboard…</div>;
-  if (!data || !data.counts) return <div className="card text-sm text-rose-600">Failed to load dashboard.</div>;
+  if (loading) return <div className="card text-sm text-slate-500"><T>Loading dashboard…</T></div>;
+  if (!data || !data.counts) return <div className="card text-sm text-rose-600"><T>Failed to load dashboard.</T></div>;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold text-teal-700">Control Room Dashboard</h1>
+        <h1 className="text-2xl font-extrabold text-teal-700"><T>Control Room Dashboard</T></h1>
         <p className="text-sm text-slate-500">
-          Live figures pulled directly from the case database.{" "}
+          <T>Live figures pulled directly from the case database.</T>{" "}
           {data.counts.dataset > 0 && (
             <span className="text-slate-400">
-              ({data.counts.dataset} cases imported from the Kumbh Mela 2027 dataset.)
+              ({data.counts.dataset} <T>cases imported from the Kumbh Mela 2027 dataset.</T>)
             </span>
           )}
         </p>
@@ -86,7 +88,7 @@ export default function Dashboard() {
       {/* Charts */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="card">
-          <h2 className="mb-3 font-bold text-slate-700">Open cases by location</h2>
+          <h2 className="mb-3 font-bold text-slate-700"><T>Open cases by location</T></h2>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.casesByLocation} margin={{ left: -10, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -99,7 +101,7 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h2 className="mb-3 font-bold text-slate-700">Cases reported over time</h2>
+          <h2 className="mb-3 font-bold text-slate-700"><T>Cases reported over time</T></h2>
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={data.casesOverTime} margin={{ left: -10, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -112,12 +114,33 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Hotspot-by-booth: which intake booth logged how many cases */}
+      <div className="card">
+        <h2 className="mb-1 font-bold text-slate-700">🛖 <T>Cases logged per booth (hotspot by booth)</T></h2>
+        <p className="mb-3 text-xs text-slate-400">
+          <T>Every case created during a booth session is stamped with that booth — this shows intake load across the ground.</T>
+        </p>
+        {data.boothHotspots.length === 0 ? (
+          <p className="text-sm text-slate-500"><T>No booth-logged cases yet.</T></p>
+        ) : (
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={data.boothHotspots} margin={{ left: -10, bottom: 30 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="booth" angle={-20} textAnchor="end" interval={0} tick={{ fontSize: 11 }} height={60} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#0A7E8C" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
       {/* Cross-center distribution + geography coverage */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="card">
-          <h2 className="mb-3 font-bold text-slate-700">Cases by reporting center</h2>
+          <h2 className="mb-3 font-bold text-slate-700"><T>Cases by reporting center</T></h2>
           <p className="mb-2 text-xs text-slate-400">
-            The core problem: reports are siloed per center. Matching links them across centers.
+            <T>The core problem: reports are siloed per center. Matching links them across centers.</T>
           </p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data.casesByCenter} margin={{ left: -10, bottom: 60 }}>
@@ -131,9 +154,9 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h2 className="mb-3 font-bold text-slate-700">🗺 Ground infrastructure (dataset)</h2>
+          <h2 className="mb-3 font-bold text-slate-700">🗺 <T>Ground infrastructure (dataset)</T></h2>
           <p className="mb-3 text-xs text-slate-400">
-            Real Nashik-Trimbakeshwar geography used for help-point routing and CCTV coverage.
+            <T>Real Nashik-Trimbakeshwar geography used for help-point routing and CCTV coverage.</T>
           </p>
           <div className="grid grid-cols-2 gap-3">
             <StatCard label="CCTV cameras" value={data.geo.cctvCameras} accent="text-indigo-600" />
@@ -147,9 +170,9 @@ export default function Dashboard() {
       {/* Hotspots + duplicates */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="card">
-          <h2 className="mb-3 font-bold text-slate-700">🔥 Hotspots (top locations by open cases)</h2>
+          <h2 className="mb-3 font-bold text-slate-700">🔥 <T>Hotspots (top locations by open cases)</T></h2>
           {data.hotspots.length === 0 ? (
-            <p className="text-sm text-slate-500">No open cases.</p>
+            <p className="text-sm text-slate-500"><T>No open cases.</T></p>
           ) : (
             <ul className="space-y-2">
               {data.hotspots.map((h) => (
@@ -171,14 +194,14 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h2 className="mb-3 font-bold text-slate-700">⚠️ Possible duplicate reports</h2>
+          <h2 className="mb-3 font-bold text-slate-700">⚠️ <T>Possible duplicate reports</T></h2>
           {data.duplicateFlags.length === 0 ? (
-            <p className="text-sm text-slate-500">No high-confidence duplicates detected.</p>
+            <p className="text-sm text-slate-500"><T>No high-confidence duplicates detected.</T></p>
           ) : (
             <ul className="space-y-3">
               {data.duplicateFlags.map((f, i) => (
                 <li key={i} className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
-                  <div className="mb-1 font-semibold text-amber-800">{f.score}% likely the same person</div>
+                  <div className="mb-1 font-semibold text-amber-800">{f.score}% <T>likely the same person</T></div>
                   <div className="flex flex-col gap-1 text-slate-700">
                     <Link href={`/cases/${f.caseIdA}`} className="hover:underline">
                       <span className="font-mono text-xs text-teal-600">{f.caseIdA}</span> — {f.summaryA}

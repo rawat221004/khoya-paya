@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StatusBadge, PathBadge, RoleBadge } from "@/components/CaseBadges";
+import { T } from "@/components/LanguageProvider";
 import type { Case } from "@/lib/types";
 
 // A case is "escalated" if it has stayed open for more than this many hours.
@@ -50,7 +51,7 @@ export default function PolicePage() {
             <PathBadge path={c.intakePath} />
             <RoleBadge role={c.role} />
             {escalatedFlag && (
-              <span className="badge bg-rose-500 text-white">⏱ Escalated · {Math.floor(hoursOpen(c))}h open</span>
+              <span className="badge bg-rose-500 text-white">⏱ <T>Escalated</T> · {Math.floor(hoursOpen(c))}h open</span>
             )}
             <span className="ml-auto font-mono text-xs text-slate-400">{c.id}</span>
           </div>
@@ -72,22 +73,22 @@ export default function PolicePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-amber-700">Police Live Feed</h1>
+          <h1 className="text-2xl font-extrabold text-amber-700"><T>Police Live Feed</T></h1>
           <p className="text-sm text-slate-500">
-            Open cases, auto-refreshing every 15s. {updatedAt && `Last updated ${updatedAt}.`}
+            <T>Open cases, auto-refreshing every 15s.</T> {updatedAt && `Last updated ${updatedAt}.`}
           </p>
         </div>
         <span className="flex items-center gap-2 text-sm text-emerald-600">
-          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" /> Live
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" /> <T>Live</T>
         </span>
       </div>
 
       <section>
         <h2 className="mb-2 text-lg font-bold text-rose-700">
-          🚨 Escalated ({escalated.length})
+          🚨 <T>Escalated</T> ({escalated.length})
         </h2>
         {escalated.length === 0 ? (
-          <div className="card text-sm text-slate-500">No escalated cases.</div>
+          <div className="card text-sm text-slate-500"><T>No escalated cases.</T></div>
         ) : (
           <div className="space-y-3">
             {escalated.map((c) => (
@@ -98,9 +99,9 @@ export default function PolicePage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-lg font-bold text-slate-700">Open cases ({recent.length})</h2>
+        <h2 className="mb-2 text-lg font-bold text-slate-700"><T>Open cases</T> ({recent.length})</h2>
         {recent.length === 0 ? (
-          <div className="card text-sm text-slate-500">No recent open cases.</div>
+          <div className="card text-sm text-slate-500"><T>No recent open cases.</T></div>
         ) : (
           <div className="space-y-3">
             {recent.map((c) => (
