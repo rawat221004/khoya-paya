@@ -5,6 +5,12 @@ at the Kumbh Mela. **It boots and works end-to-end even with no `ANTHROPIC_API_K
 every Claude-powered feature has a deterministic fallback. Add a key to switch those
 features to real Claude responses.
 
+## 🎬 Demo
+
+https://github.com/user-attachments/assets/The_17-Minute_Anatomy_of_a_Reunion.mp4
+
+<video src="The_17-Minute_Anatomy_of_a_Reunion.mp4" controls width="100%"></video>
+
 ## Stack
 
 - **Next.js 14** (App Router, TypeScript)
