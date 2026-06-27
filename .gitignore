@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+*.log
+.DS_Store
+data/db.json
+public/uploads/*
+!public/uploads/.gitkeep
+next-env.d.ts
+.claude/settings.local.json
