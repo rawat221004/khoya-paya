@@ -1,4 +1,4 @@
-# 🪔 Kumbh Setu — Missing Persons Management System
+# 🪔 Khoya Paya — Missing Persons Management System
 
 A complete, locally-runnable full-stack web app for managing missing-person cases
 at the Kumbh Mela. **It boots and works end-to-end even with no `ANTHROPIC_API_KEY`** —

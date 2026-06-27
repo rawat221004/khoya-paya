@@ -104,7 +104,7 @@ export default function Navbar() {
       <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3">
         <Link href={me ? "/cases" : "/login"} className="flex items-center gap-2">
           <span className="text-2xl">🪔</span>
-          <span className="text-lg font-extrabold tracking-tight">Kumbh Setu</span>
+          <span className="text-lg font-extrabold tracking-tight">Khoya Paya</span>
         </Link>
 
         <nav className="hidden flex-1 items-center gap-1 sm:flex">

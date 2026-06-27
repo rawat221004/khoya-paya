@@ -37,7 +37,7 @@ Translate each into natural, concise ${targetLang} suitable for on-screen UI.
 Rules:
 - Keep it short — these are UI labels, not sentences to pad.
 - Preserve any leading emoji/icons and trailing punctuation exactly.
-- Do NOT translate proper nouns/brand "Kumbh Setu", place names, or example text inside quotes.
+- Do NOT translate proper nouns/brand "Khoya Paya", place names, or example text inside quotes.
 - Return ONLY strict minified JSON of the form {"translations": ["...", "..."]} with EXACTLY the same number of items, in the same order. No prose.`;
 
   const userContent = JSON.stringify({ strings: texts });

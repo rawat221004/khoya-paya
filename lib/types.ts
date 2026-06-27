@@ -1,4 +1,4 @@
-// Shared data model types for Kumbh Setu.
+// Shared data model types for Khoya Paya.
 
 // Staff users log in with a personal account; a booth IS a login (used by
 // whichever volunteer is stationed there that shift). So there are two principal

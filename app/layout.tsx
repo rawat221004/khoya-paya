@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import { LanguageProvider } from "@/components/LanguageProvider";
 
 export const metadata: Metadata = {
-  title: "Kumbh Setu — Missing Persons Management",
+  title: "Khoya Paya — Missing Persons Management",
   description:
     "Missing Persons Management System for the Kumbh Mela. Intake, AI matching, and reunification.",
 };

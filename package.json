@@ -1,8 +1,8 @@
 {
-  "name": "kumbh-setu",
+  "name": "khoya-paya",
   "version": "1.0.0",
   "private": true,
-  "description": "Kumbh Setu — Missing Persons Management System for the Kumbh Mela",
+  "description": "Khoya Paya — Missing Persons Management System for the Kumbh Mela",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

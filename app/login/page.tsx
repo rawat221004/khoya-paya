@@ -85,7 +85,7 @@ function LoginForm() {
       <div className="card">
         <div className="mb-5 text-center">
           <div className="text-4xl">🪔</div>
-          <h1 className="mt-2 text-2xl font-extrabold text-teal-700">Kumbh Setu</h1>
+          <h1 className="mt-2 text-2xl font-extrabold text-teal-700">Khoya Paya</h1>
           <p className="text-sm text-slate-500"><T>Missing Persons Management System</T></p>
         </div>
 
@@ -100,7 +100,7 @@ function LoginForm() {
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            👮 <T>Staff Login</T>
+            👮 <T>Volunteer Login</T>
           </button>
           <button
             type="button"
@@ -160,7 +160,7 @@ function LoginForm() {
 
       <div className="card mt-4">
         <p className="mb-2 text-sm font-semibold text-slate-600">
-          {tab === "staff" ? <T>Staff demo accounts</T> : <T>Booth demo accounts</T>} (<T>click to fill</T>):
+          {tab === "staff" ? <T>Volunteer demo accounts</T> : <T>Booth demo accounts</T>} (<T>click to fill</T>):
         </p>
         <div className="space-y-2">
           {demo.map((d) => (
