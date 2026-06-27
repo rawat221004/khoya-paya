@@ -8,7 +8,7 @@ features to real Claude responses.
 ## 🎬 Demo
 
 ▶️ **[Watch the full 17-minute demo video](https://github.com/rawat221004/khoya-paya/raw/main/The_17-Minute_Anatomy_of_a_Reunion.mp4)** *(click to download/play — 39 MB)*
-
+Platform Demo : https://drive.google.com/file/d/1qzT0OE1Bw1Al3tn1j1BVSvcMmoWsnMfI/view?usp=sharing  
 ---
 
 ## 🏗️ Architecture
