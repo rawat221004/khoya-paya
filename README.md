@@ -7,9 +7,7 @@ features to real Claude responses.
 
 ## 🎬 Demo
 
-https://github.com/user-attachments/assets/The_17-Minute_Anatomy_of_a_Reunion.mp4
-
-<video src="The_17-Minute_Anatomy_of_a_Reunion.mp4" controls width="100%"></video>
+<video src="https://github.com/rawat221004/khoya-paya/raw/main/The_17-Minute_Anatomy_of_a_Reunion.mp4" controls width="100%"></video>
 
 ## Stack
 
