@@ -8,7 +8,7 @@ import { T, useLang, UI_LANGUAGES } from "@/components/LanguageProvider";
 interface Me {
   id: string;
   username: string;
-  role: "admin" | "police" | "booth";
+  role: "admin" | "police" | "booth" | "volunteer";
   name: string;
   kind?: "user" | "booth";
 }
@@ -24,6 +24,10 @@ const ROLE_LINKS: Record<Me["role"], Array<{ href: string; label: string }>> = {
     { href: "/booth", label: "Intake" },
     { href: "/cases", label: "Cases" },
   ],
+  volunteer: [
+    { href: "/booth", label: "Intake" },
+    { href: "/cases", label: "Cases" },
+  ],
   police: [
     { href: "/police", label: "Police Feed" },
     { href: "/cases", label: "Cases" },
@@ -33,12 +37,14 @@ const ROLE_LINKS: Record<Me["role"], Array<{ href: string; label: string }>> = {
 const ROLE_BADGE: Record<Me["role"], string> = {
   admin: "bg-purple-100 text-purple-700",
   booth: "bg-teal-100 text-teal-700",
+  volunteer: "bg-emerald-100 text-emerald-700",
   police: "bg-amber-100 text-amber-800",
 };
 
 const ROLE_LABEL: Record<Me["role"], string> = {
   admin: "admin",
   booth: "booth",
+  volunteer: "volunteer",
   police: "police",
 };
 

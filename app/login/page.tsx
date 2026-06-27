@@ -7,6 +7,7 @@ import { T } from "@/components/LanguageProvider";
 type LoginType = "staff" | "booth";
 
 const STAFF_DEMO = [
+  { role: "Volunteer", username: "volunteer1", password: "Volunteer@123" },
   { role: "Admin", username: "admin", password: "Admin@123" },
   { role: "Police", username: "police1", password: "Police@123" },
 ];

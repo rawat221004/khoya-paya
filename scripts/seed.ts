@@ -75,10 +75,11 @@ async function main() {
   const db = await getDb();
   db.data = structuredClone(defaultData);
 
-  // --- Staff users (admin + police only; booths are separate logins) -------
+  // --- Staff users (admin / police / volunteer; booths are separate logins) -
   const userSpecs: Array<Omit<User, "passwordHash"> & { password: string }> = [
     { id: "user_admin", username: "admin", password: "Admin@123", role: "admin", name: "Control Room Admin" },
     { id: "user_pol1", username: "police1", password: "Police@123", role: "police", name: "Inspector Rao" },
+    { id: "user_vol1", username: "volunteer1", password: "Volunteer@123", role: "volunteer", name: "Volunteer Asha" },
   ];
   for (const u of userSpecs) {
     db.data.users.push({

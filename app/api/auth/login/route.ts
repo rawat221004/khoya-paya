@@ -65,7 +65,12 @@ export async function POST(req: NextRequest) {
       name: user.name,
       kind: "user",
     },
-    redirect: user.role === "admin" ? "/dashboard" : "/police",
+    redirect:
+      user.role === "admin"
+        ? "/dashboard"
+        : user.role === "police"
+        ? "/police"
+        : "/booth", // volunteer
   });
   setCookie(res, token);
   return res;

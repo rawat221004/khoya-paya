@@ -8,7 +8,7 @@ const COOKIE_NAME = "kumbh_session";
 const SECRET =
   process.env.SESSION_SECRET || "kumbh-setu-dev-secret-key-change-me-please";
 
-type Role = "admin" | "police" | "booth";
+type Role = "admin" | "police" | "booth" | "volunteer";
 
 function b64urlToBytes(b64url: string): Uint8Array {
   const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
@@ -62,14 +62,14 @@ async function verify(
 const RULES: Array<{ prefix: string; roles: Role[] }> = [
   { prefix: "/dashboard", roles: ["admin"] },
   { prefix: "/police", roles: ["police", "admin"] },
-  { prefix: "/booth", roles: ["booth", "admin"] },
-  { prefix: "/cases", roles: ["admin", "booth", "police"] },
+  { prefix: "/booth", roles: ["booth", "admin", "volunteer"] },
+  { prefix: "/cases", roles: ["admin", "booth", "police", "volunteer"] },
 ];
 
 function homeFor(role: Role): string {
   if (role === "admin") return "/dashboard";
   if (role === "police") return "/police";
-  return "/booth";
+  return "/booth"; // booth + volunteer
 }
 
 export async function middleware(req: NextRequest) {

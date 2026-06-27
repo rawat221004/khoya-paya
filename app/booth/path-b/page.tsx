@@ -7,6 +7,7 @@ import {
   TextField,
   TextAreaField,
   LocationField,
+  PhotoUpload,
 } from "@/components/Fields";
 import IntakeResult, { CreatedResult } from "@/components/IntakeResult";
 import { T, useLang } from "@/components/LanguageProvider";
@@ -65,6 +66,7 @@ export default function PathB() {
   const [gender, setGender] = useState("");
   const [region, setRegion] = useState("");
   const [characteristics, setCharacteristics] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   const [structuring, setStructuring] = useState(false);
   const [structuredByClaude, setStructuredByClaude] = useState(false);
@@ -260,6 +262,7 @@ export default function PathB() {
     setGender("");
     setRegion("");
     setLocation(null);
+    setPhotoUrl(null);
     setStructuredByClaude(false);
     setStructureNote(null);
     setReviewed(false);
@@ -318,6 +321,7 @@ export default function PathB() {
           ageRange,
           gender,
           characteristics: desc || "(captured via audio — see transcript)",
+          photoUrl,
           rawTranscript: transcript || null,
           structuredByClaude,
           reporterName: name || null,
@@ -518,6 +522,8 @@ export default function PathB() {
           <SelectField label="Gender" value={gender} onChange={setGender} options={GENDERS} />
           <SelectField label="Home region" value={region} onChange={setRegion} options={REGIONS} />
         </div>
+
+        <PhotoUpload value={photoUrl} onChange={setPhotoUrl} />
 
         {error && <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700"><T>{error}</T></div>}
 

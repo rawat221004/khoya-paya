@@ -3,8 +3,8 @@
 // Staff users log in with a personal account; a booth IS a login (used by
 // whichever volunteer is stationed there that shift). So there are two principal
 // kinds. For route-gating purposes a booth carries the synthetic role "booth".
-export type StaffRole = "admin" | "police";
-export type PrincipalRole = "admin" | "police" | "booth";
+export type StaffRole = "admin" | "police" | "volunteer";
+export type PrincipalRole = "admin" | "police" | "booth" | "volunteer";
 export type PrincipalKind = "user" | "booth";
 
 export type CaseStatus = "open" | "matched_pending" | "closed";
