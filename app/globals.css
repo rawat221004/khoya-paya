@@ -50,3 +50,13 @@ body {
     min-height: 9rem;
   }
 }
+
+/* CCTV "scanning" line that sweeps the monitor while a trace is shown. */
+@keyframes cctv-scan {
+  0% { transform: translateY(0); opacity: 0.2; }
+  50% { opacity: 0.9; }
+  100% { transform: translateY(18rem); opacity: 0.2; }
+}
+.cctv-scan {
+  animation: cctv-scan 2.4s linear infinite;
+}
