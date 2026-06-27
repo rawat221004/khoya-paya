@@ -9,6 +9,16 @@ features to real Claude responses.
 
 <video src="https://github.com/rawat221004/khoya-paya/raw/main/The_17-Minute_Anatomy_of_a_Reunion.mp4" controls width="100%"></video>
 
+## 🏗️ Architecture
+
+🔗 **[View full architecture on Miro (view-only)](https://miro.com/welcomeonboard/ZUVUckdHZXVDSGQyTlJoVC84NFJvSmt6YUhvZXZBQW1BeE9tbEkyVmtHaHhaa0VOUmkrdmRHSFhydldKQkZlSEd2NXVLWVdrRUNJc0dHdGlOUGwvek5uWHNuREJzczN4ZFZwL0o2d2RlVW1RMFJkenpXS3VoZ0lRb2FvaGl4TFVhWWluRVAxeXRuUUgwWDl3Mk1qRGVRPT0hdjE=?share_link_id=746317454742)**
+
+### Multilingual Language Selector
+
+<p align="center">
+  <img src="docs/language-selector.png" alt="Khoya Paya — Multilingual Language Selector for Kumbh Mela 2027" width="100%" />
+</p>
+
 ## Stack
 
 - **Next.js 14** (App Router, TypeScript)

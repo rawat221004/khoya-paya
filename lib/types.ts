@@ -98,6 +98,27 @@ export interface AuditEntry {
   timestamp: string;
 }
 
+// A single CCTV camera "sighting" on a tracking trail.
+export interface CctvSighting {
+  cameraId: string;
+  lat: number;
+  lng: number;
+  distanceKm: number;
+  timestamp: string; // when the subject was (estimated to be) seen at this camera
+  confidence: number; // 0-100, decays along the trail
+  note: string; // short human-readable line, e.g. appearance recap
+}
+
+// The result of tracing a case's subject across the CCTV network.
+export interface CctvTrack {
+  id: string;
+  caseId: string;
+  createdAt: string;
+  appearance: string; // appearance descriptor used for matching
+  usedVision: boolean; // true if the photo was analysed by Claude vision
+  sightings: CctvSighting[];
+}
+
 export interface DbData {
   users: User[];
   booths: Booth[];
@@ -105,4 +126,5 @@ export interface DbData {
   matchCandidates: MatchCandidate[];
   auditLog: AuditEntry[];
   sessions: Session[];
+  cctvTracks: CctvTrack[];
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatusBadge, PathBadge, RoleBadge, confidenceColor } from "@/components/CaseBadges";
 import { T } from "@/components/LanguageProvider";
 import { LANGUAGES } from "@/lib/constants";
-import type { Case } from "@/lib/types";
+import type { Case, CctvTrack } from "@/lib/types";
 
 interface AiExplanation {
   bullets: string[];
@@ -64,6 +64,14 @@ export default function CaseDetail() {
   const [translation, setTranslation] = useState<
     { text: string; usedClaude: boolean; target: string } | null
   >(null);
+
+  // CCTV tracking.
+  const [cctv, setCctv] = useState<CctvTrack | null>(null);
+  const [tracing, setTracing] = useState(false);
+  const [activeSighting, setActiveSighting] = useState(0);
+  const [videoOk, setVideoOk] = useState(true);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const autoTracedRef = useRef(false);
   const [geo, setGeo] = useState<{
     nearestPolice: { name: string; km: number } | null;
     nearestChokepoint: { name: string; category: string | null; km: number } | null;

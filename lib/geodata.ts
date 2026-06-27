@@ -97,6 +97,18 @@ export function nearestChokepoint(
   return best;
 }
 
+/** The N nearest CCTV cameras to a point, sorted nearest-first. */
+export function nearestCctvCameras(
+  point: GeoPoint,
+  n = 6
+): Array<{ camera: NamedPoint; km: number }> {
+  const { cctv } = load();
+  return cctv
+    .map((camera) => ({ camera, km: haversineDistanceKm(point, camera) }))
+    .sort((a, b) => a.km - b.km)
+    .slice(0, n);
+}
+
 /** Number of CCTV cameras within `radiusKm` of a point (coverage indicator). */
 export function cctvCoverageNear(point: GeoPoint, radiusKm = 1): number {
   const { cctv } = load();

@@ -59,6 +59,58 @@ export async function askClaude(
 }
 
 /**
+ * Vision variant: sends a base64 image plus a text prompt and returns Claude's
+ * text response (or null on no key / failure). Used by the CCTV tracker to
+ * describe the person in an uploaded/captured case photo.
+ */
+export async function askClaudeVision(
+  systemPrompt: string,
+  text: string,
+  image: { base64: string; mediaType: string },
+  maxTokens = 600
+): Promise<string | null> {
+  if (!claudeConfigured()) return null;
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const message = await client.messages.create({
+      model: claudeModel(),
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: image.mediaType as
+                  | "image/jpeg"
+                  | "image/png"
+                  | "image/gif"
+                  | "image/webp",
+                data: image.base64,
+              },
+            },
+            { type: "text", text },
+          ],
+        },
+      ],
+    });
+    const out = message.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("\n")
+      .trim();
+    return out || null;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("Claude vision request failed — falling back:", err);
+    return null;
+  }
+}
+
+/**
  * Helper for callers that expect strict JSON back. Strips ```json fences and
  * extracts the first {...} object, then parses. Returns null on any failure so
  * the caller can use its deterministic fallback.

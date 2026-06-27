@@ -177,7 +177,7 @@ export function PhotoUpload({
 
   return (
     <Field label="Photo (optional)">
-      <input type="file" accept="image/*" onChange={handle} className="block w-full text-sm" />
+      <input type="file" accept="image/*" capture="environment" onChange={handle} className="block w-full text-sm" />
       {uploading && <p className="mt-1 text-xs text-teal-600"><T>Uploading…</T></p>}
       {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
       {value && (

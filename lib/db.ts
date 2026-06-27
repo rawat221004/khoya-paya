@@ -19,6 +19,7 @@ export const defaultData: DbData = {
   matchCandidates: [],
   auditLog: [],
   sessions: [],
+  cctvTracks: [],
 };
 
 function ensureDir() {
@@ -58,6 +59,7 @@ export async function getDb(): Promise<Low<DbData>> {
   db.data.matchCandidates ||= [];
   db.data.auditLog ||= [];
   db.data.sessions ||= [];
+  db.data.cctvTracks ||= [];
   return db;
 }
 
